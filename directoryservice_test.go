@@ -1,10 +1,12 @@
 package directoryservice
 
 import (
-	"fmt"
 	"io/ioutil"
-	"strings"
+	"path/filepath"
 	"testing"
+
+	"github.com/go-errors/errors"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -12,69 +14,72 @@ const (
 	fileName   = "fry.txt"
 )
 
-var fullPath = fmt.Sprintf("%s/%s", customPath, fileName)
+var fullPath = filepath.Join(customPath, fileName)
 
-func TestNewDirectoryServiceDefault(t *testing.T) {
-	ds, err := NewDirectoryService("")
-	if err != nil {
-		t.Errorf("NewDirectoryService = %v, expected nil", err)
-	}
-	if ds.BasePath() == "" {
-		t.Error("ds.BasePath = \"\" expected actual path")
-	}
-	if err := ds.Cleanup(); err != nil {
-		t.Errorf("ds.Close = %v, expected nil", err)
+type DirectoryServiceTestSuite struct {
+	suite.Suite
+	service DirectoryService
+	cleanup bool
+}
+
+func (s *DirectoryServiceTestSuite) TearDownTest() {
+	if s.cleanup {
+		s.Nil(s.service.Cleanup())
 	}
 }
 
-func TestNewDirectoryServiceCustom(t *testing.T) {
-	ds, err := NewDirectoryService(customPath)
-	if err != nil {
-		t.Errorf("NewDirectoryService = %v, expected nil", err)
-	}
-	basePath := ds.BasePath()
-	if basePath != customPath {
-		t.Errorf("ds.BasePath = %q expected %q", basePath, customPath)
-	}
+func (s *DirectoryServiceTestSuite) withDirectory(name string) {
+	service, err := NewDirectoryService(name)
+	s.Require().Nil(err)
+	s.service = service
 }
 
-func TestFullPath(t *testing.T) {
-	ds, _ := NewDirectoryService(customPath)
-	actual := ds.FullPath(fileName)
-	if actual != fullPath {
-		t.Errorf("ds.FullPath = %q, expected %q", actual, fullPath)
-	}
+func (s *DirectoryServiceTestSuite) withTemporaryDirectory() {
+	s.withDirectory("")
+	s.cleanup = true
 }
 
-func TestRecurse(t *testing.T) {
-	ds, _ := NewDirectoryService("")
-	defer ds.Cleanup()
-	if err := ioutil.WriteFile(ds.FullPath("baconium.go"), []byte("bacon"), 0777); err != nil {
-		t.Fatalf("ioutil.WriteFile = %v, expected nil", err)
-	}
-	if err := ioutil.WriteFile(ds.FullPath("cabbagium.rb"), []byte("cabbage"), 0777); err != nil {
-		t.Fatalf("ioutil.WriteFile = %v, expected nil", err)
-	}
-	files, err := ds.Recurse(".", IsGoFile)
-	if err != nil {
-		t.Fatalf("ds.Recurse err = %v, expected nil", err)
-	}
-	listLen := len(files)
-	if listLen != 1 {
-		t.Fatalf("ds.Recurse returned %d files, expected 1", listLen)
-	}
-	if !strings.HasSuffix(files[0], "baconium.go") {
-		t.Errorf("file name = %q, expected */baconium.go", files[0])
-	}
+func (s *DirectoryServiceTestSuite) withCustomDirectory() {
+	s.withDirectory(customPath)
 }
 
-func TestRelativePath(t *testing.T) {
-	ds, _ := NewDirectoryService(customPath)
-	actual, err := ds.RelativePath(fullPath)
-	if err != nil {
-		t.Fatalf("ds.RelativePath err = %v, expected nil", err)
+func (s *DirectoryServiceTestSuite) TestTempdirLifecycle() {
+	s.withTemporaryDirectory()
+	s.NotEmpty(s.service.BasePath())
+}
+
+func (s *DirectoryServiceTestSuite) TestRecurse() {
+	s.withTemporaryDirectory()
+	for _, file := range []string{"baconium.go", "cabbagium.rb"} {
+		path := s.service.FullPath(file)
+		s.Require().Nil(ioutil.WriteFile(path, []byte("bacon"), 0777))
 	}
-	if actual != fileName {
-		t.Errorf("ds.RelativePath = %q, expected %q", actual, fileName)
-	}
+	files, err := s.service.Recurse(".", IsGoFile)
+	s.Require().Nil(err)
+	s.Len(files, 1)
+	s.Contains(files[0], "baconium.go")
+}
+
+func (s *DirectoryServiceTestSuite) TestCustomDirectory() {
+	s.withCustomDirectory()
+	s.Equal(s.service.BasePath(), customPath)
+	s.Equal(s.service.FullPath(fileName), fullPath)
+}
+
+func (s *DirectoryServiceTestSuite) TestRelativePathSuccess() {
+	s.withCustomDirectory()
+	result, err := s.service.RelativePath(fullPath)
+	s.Require().Nil(err)
+	s.Equal(fileName, result)
+}
+
+func (s *DirectoryServiceTestSuite) TestRelativePathError() {
+	s.withCustomDirectory()
+	_, err := s.service.RelativePath(fileName)
+	s.Require().NotNil(err)
+	s.IsType((*errors.Error)(nil), err)
+}
+
+func TestDirectoryService(t *testing.T) {
+	suite.Run(t, new(DirectoryServiceTestSuite))
 }
