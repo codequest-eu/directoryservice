@@ -1,3 +1,7 @@
+// Package directoryservice provides a useful abstraction for working with
+// temporary directories and files they contain without the need to explicitly
+// deal with the underlying OS's impementation. This can be useful for things
+// like temporarily cloning Git repositories.
 package directoryservice
 
 import (
