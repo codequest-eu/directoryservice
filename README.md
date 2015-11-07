@@ -1,13 +1,12 @@
-# directoryservice
---
-    import "github.com/codequest-eu/directoryservice"
+# directoryservice [![GoDoc](https://godoc.org/github.com/codequest-eu/directoryservice?status.svg)](https://godoc.org/github.com/codequest-eu/directoryservice) [![GoCover](http://gocover.io/_badge/github.com/codequest-eu/directoryservice)](http://gocover.io/github.com/codequest-eu/directoryservice)
 
-Package directoryservice provides a useful abstraction for working with
-temporary directories and files they contain without the need to explicitly deal
-with the underlying OS's impementation. This can be useful for things like
-temporarily cloning Git repositories.
+Package directoryservice provides a useful abstraction for working with temporary directories and files they contain without the need to explicitly deal with the underlying OS's impementation. This can be useful for things like temporarily cloning Git repositories.
+
+[![wercker status](https://app.wercker.com/status/aea4ead7c0e7add1f0448f17f18d03f2/m/master "wercker status")](https://app.wercker.com/project/bykey/aea4ead7c0e7add1f0448f17f18d03f2)
 
 ## Usage
+
+    import "github.com/codequest-eu/directoryservice"
 
 #### func  IsGoFile
 
