@@ -1,4 +1,4 @@
-# directoryservice [![GoDoc](https://godoc.org/github.com/codequest-eu/directoryservice?status.svg)](https://godoc.org/github.com/codequest-eu/directoryservice) [![GoCover](http://gocover.io/_badge/github.com/codequest-eu/directoryservice)](http://gocover.io/github.com/codequest-eu/directoryservice)
+# directoryservice [![codebeat badge](https://codebeat.co/badges/fe5a26da-9b90-47be-b8b3-6ce870adb3ff)](https://codebeat.co/projects/directoryservice-master) [![GoDoc](https://godoc.org/github.com/codequest-eu/directoryservice?status.svg)](https://godoc.org/github.com/codequest-eu/directoryservice) [![GoCover](http://gocover.io/_badge/github.com/codequest-eu/directoryservice)](http://gocover.io/github.com/codequest-eu/directoryservice)
 
 Package directoryservice provides a useful abstraction for working with temporary directories and files they contain without the need to explicitly deal with the underlying OS's impementation. This can be useful for things like temporarily cloning Git repositories.
 
