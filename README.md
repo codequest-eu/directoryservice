@@ -8,25 +8,12 @@ Package directoryservice provides a useful abstraction for working with temporar
 
     import "github.com/codequest-eu/directoryservice"
 
-#### func  IsGoFile
+
+#### type Service
 
 ```go
-func IsGoFile(fi os.FileInfo) bool
-```
-IsGoFile is a filter checking if a file is a Go file.
-
-#### func  IsNotTest
-
-```go
-func IsNotTest(fi os.FileInfo) bool
-```
-IsNotTest is a filter checking if a file is not a Go test file.
-
-#### type DirectoryService
-
-```go
-type DirectoryService interface {
-	// BasePath returns the base path for the DirectoryService.
+type Service interface {
+	// BasePath returns the base path for the Service.
 	BasePath() string
 
 	// FullPath returns a full path given a relative one.
@@ -40,21 +27,28 @@ type DirectoryService interface {
 	RelativePath(string) (string, error)
 
 	// Cleanup removes the whole base directory. It invalidates the current
-	// DirectoryService.
+	// Service.
 	Cleanup() error
 }
 ```
 
-DirectoryService takes responsibility of creating and removing local temporary
-directories.
+Service provides a number of helpful utility methods for a single directory.
 
-#### func  NewDirectoryService
+#### func TemporaryService
 
 ```go
-func NewDirectoryService(path string) (DirectoryService, error)
+func TemporaryService() (Service, error)
 ```
-NewDirectoryService returns a new instance of DirectoryService. If an empty path
-is passed a temporary directory is created.
+
+TemporaryService returns a new instance of Service which creates a temporary directory for its' purposes.
+
+#### func DirectoryService
+
+```go
+func DirectoryService(path string) (Service, error)
+```
+
+DirectoryService takes an existing directory and creates an instance of Service around it. The consturctor verifies that the provided path leads to a valid directory.
 
 #### type Filter
 
@@ -62,5 +56,4 @@ is passed a temporary directory is created.
 type Filter func(os.FileInfo) bool
 ```
 
-Filter is a function which takes file metadata and decides whether we care about
-it.
+Filter is a function which takes file metadata and decides whether we care about it.
